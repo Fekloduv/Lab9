@@ -8,7 +8,6 @@ class ConfigException(Exception):
         with open('error.log', 'a') as log_file:
             log_file.write(f"{message}\n")
 
-
 class FileReaderInterface(ABC):
     @abstractmethod
     def read_file(self, buffer_size):
@@ -20,6 +19,8 @@ class MyFileReader(FileReaderInterface):
         self.file_path = file_path
 
     def read_file(self, buffer_size):
+        if buffer_size <= 0:
+            raise ConfigException("Размер буфера должен быть положительным числом.")
         try:
             with open(self.file_path, 'r') as file:
                 while True:
@@ -83,12 +84,9 @@ class Coder(CoderInterface):
         return ''.join(result)
 
     def run(self, text, option):
-        if option == "code":
-            return self._cipher(text, self.key, encode=True)
-        elif option == "decode":
-            return self._cipher(text, self.key, encode=False)
-        else:
+        if option not in ["code", "decode"]:
             raise ConfigException(f"Некорректная опция кодирования: {option}")
+        return self._cipher(text, self.key, encode=(option == "code"))
 
 
 class MainClass:
@@ -113,14 +111,14 @@ class MainClass:
         # Вывод результата
         print(result)
 
-
 if __name__ == "__main__":
-    config_path = input("Введите путь к конфигурационному файлу: ")
+    config_path = "config.txt"  # Замените на путь к вашему конфигурационному файлу
 
     # Создание объектов классов
     config_reader = MyConfigReader()
     coder = Coder()
+    file_reader = MyFileReader("input.txt")  # Замените на путь к вашему входному файлу
 
     # Создание и запуск главного класса
-    main_class = MainClass(config_reader, None, coder)
+    main_class = MainClass(config_reader, file_reader, coder)
     main_class.run(config_path)
